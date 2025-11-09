@@ -1,0 +1,60 @@
+...PyCon Asia Pacific", "PyCon APAC" in Asia "PyCon AR", "PyCon Argentina" in Argentina "PyCon AT", "PyCon Austria" in Austria "PyCon AU", "PyCon Australia" in Australia "PyCon BY", "PyCon Belarus" in Belarus "PyCon CA", "PyCon Canada" in Canada "PyCon CL", "PyCon Chile" in Chile "PyCon CN", "PyCon China" in China "PyCon CZ", "P...
+From 15 April through 17 April, 2016
+Location: Hotel Mediterraneo, Lungarno del Tempio, Florence, Italia
+PyCon Italia 2016 (PyCon Sette)
+From 05 July through 07 July, 2013
+Location: Hobart, Australia
+PyCon Australia 2013
+16 Oct. from 12am UTC , 2025
+Location: Utrecht, The Netherlands
+PyCon NL 2025
+From 02 Aug. through 06 Aug., 2019
+Location: Sydney, Australia
+PyCon AU
+From 01 Aug. through 05 Aug., 2014
+Location: Brisbane, Australia
+PyCon Australia 2014
+From 13 Oct. through 14 Oct., 2012
+Location: Dublin, Ireland
+PyCon Ireland 2012
+From 05 Nov. through 06 Nov., 2016
+Location: Dublin, Ireland
+PyCon Ireland 2016
+From 12 Nov. through 13 Nov., 2022
+Location: Dublin, Ireland
+PyCon Ireland 2022
+From 01 Aug. through 05 Aug., 2014
+Location: Brisbane, Australia
+PyCon Australia 2014
+From 16 Nov. through 17 Nov., 2024
+Location: Dublin, Ireland
+PyCon Ireland 2024
+From 01 March through 02 March, 2025
+Location: Quezon City, Philippines
+PyCon APAC 2025
+From 03 Sept. through 04 Sept., 2022
+Location: Online, Taiwan
+PyCon APAC 2022 (hosted by PyCon Taiwan)
+From 25 Feb. through 26 Feb., 2024
+Location: Makati City, Philippines
+PyCon PH 2024
+From 24 Aug. through 28 Aug., 2018
+Location: ICC, Sydney, Australia
+PyCon AU 2018
+From 11 Nov. through 12 Nov., 2023
+Location: Dublin, Ireland
+PyCon Ireland 2023
+From 16 Oct. through 19 Oct., 2014
+Location: „Orle Gniazdo” Congress & Recreation Centre, 28a, Wrzosowa St., Szczyrk, Poland
+PyCon PL is a polish Python conference - one of many PyCons happening around the world. It aims to integrate developers, designers and managers interested in using Python. Such meeting makes a great opportunity to meet new people and exchange experiences and ideas. The conference program should suit as well …
+From 21 Aug. through 23 Aug., 2015
+Location: Faculty of Computer Science and Information Technology, University of Malaya, Malaysia
+PyCon MY 2015
+From 24 Oct. through 25 Oct., 2015
+Location: Radisson Blu Royal Hotel Dublin, Golden Ln, Dublin 8
+PyCon Ireland 2015
+From 31 July through 04 Aug., 2015
+Location: Pullman Brisbane King George Square, Roma Street, Brisbane QLD 4000, Australia
+PyCon AU 2015
+If you didn't find what you need, try your search in the Python language documentation.
+Copyright ©2001-2025.  Python Software Foundation  Legal Statements  Privacy Notice
