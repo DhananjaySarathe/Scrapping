@@ -9,6 +9,7 @@ import json
 import time
 import os
 import re
+import hashlib
 from typing import List, Dict, Optional
 from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
@@ -111,6 +112,90 @@ class LinkedInAdDetailBatchScraper:
             print(f"  Error extracting logo: {e}")
             return None
     
+    def _get_file_extension(self, url: str, content_type: str = None) -> str:
+        """Determine file extension from URL or content type"""
+        parsed = urlparse(url)
+        path = parsed.path.lower()
+        
+        if '.jpg' in path or '.jpeg' in path:
+            return '.jpg'
+        elif '.png' in path:
+            return '.png'
+        elif '.gif' in path:
+            return '.gif'
+        elif '.webp' in path:
+            return '.webp'
+        elif '.mp4' in path:
+            return '.mp4'
+        elif '.webm' in path:
+            return '.webm'
+        elif '.mov' in path:
+            return '.mov'
+        
+        if content_type:
+            if 'image/jpeg' in content_type:
+                return '.jpg'
+            elif 'image/png' in content_type:
+                return '.png'
+            elif 'image/gif' in content_type:
+                return '.gif'
+            elif 'image/webp' in content_type:
+                return '.webp'
+            elif 'video/mp4' in content_type:
+                return '.mp4'
+            elif 'video/webm' in content_type:
+                return '.webm'
+        
+        if 'video' in url.lower() or 'playlist' in url.lower():
+            return '.mp4'
+        elif 'logo' in url.lower() or 'image' in url.lower():
+            return '.jpg'
+        
+        return '.bin'
+    
+    def _generate_filename(self, url: str, asset_type: str, ad_id: str, index: int = 0) -> str:
+        """Generate a filename for the asset"""
+        parsed = urlparse(url)
+        path = parsed.path
+        
+        path_parts = [p for p in path.split('/') if p and p not in ['dms', 'image', 'v2', 'playlist', 'vid']]
+        
+        if path_parts:
+            base_name = path_parts[-1]
+            base_name = re.sub(r'[^a-zA-Z0-9_-]', '_', base_name)
+            base_name = base_name[:50]
+        else:
+            url_hash = hashlib.md5(url.encode()).hexdigest()[:8]
+            base_name = f"{asset_type}_{url_hash}"
+        
+        ext = self._get_file_extension(url)
+        return f"{ad_id}_{base_name}_{index}{ext}"
+    
+    def _download_asset(self, url: str, output_path: str) -> bool:
+        """Download a single asset"""
+        try:
+            head_response = self.session.head(url, timeout=10, allow_redirects=True)
+            
+            if head_response.status_code == 200:
+                response = self.session.get(url, timeout=30, stream=True, allow_redirects=True)
+                
+                if response.status_code == 200:
+                    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                    
+                    with open(output_path, 'wb') as f:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                f.write(chunk)
+                    
+                    return True
+                else:
+                    return False
+            else:
+                return False
+                
+        except Exception:
+            return False
+    
     def _extract_assets_from_html(self, soup: BeautifulSoup) -> Dict[str, List[str]]:
         """Extract images and videos from HTML"""
         assets = {
@@ -188,6 +273,59 @@ class LinkedInAdDetailBatchScraper:
             print(f"  Error extracting assets: {e}")
             return assets
     
+    def _download_ad_assets(self, ad_id: str, logo_url: Optional[str], assets: Dict[str, List[str]], 
+                           output_dir: str) -> Dict[str, List[str]]:
+        """Download all assets for an ad"""
+        downloaded = {
+            "logo": None,
+            "images": [],
+            "videos": [],
+            "posters": []
+        }
+        
+        # Create ad-specific directory
+        ad_dir = os.path.join(output_dir, ad_id)
+        
+        # Download logo
+        if logo_url:
+            logo_filename = self._generate_filename(logo_url, "logo", ad_id, 0)
+            logo_path = os.path.join(ad_dir, "logo", logo_filename)
+            if self._download_asset(logo_url, logo_path):
+                downloaded["logo"] = logo_path
+                print(f"    ✓ Logo downloaded")
+        
+        # Download images
+        if assets.get("images"):
+            for i, img_url in enumerate(assets["images"], 1):
+                img_filename = self._generate_filename(img_url, "image", ad_id, i)
+                img_path = os.path.join(ad_dir, "images", img_filename)
+                if self._download_asset(img_url, img_path):
+                    downloaded["images"].append(img_path)
+            if downloaded["images"]:
+                print(f"    ✓ Downloaded {len(downloaded['images'])} images")
+        
+        # Download videos
+        if assets.get("videos"):
+            for i, video_url in enumerate(assets["videos"], 1):
+                video_filename = self._generate_filename(video_url, "video", ad_id, i)
+                video_path = os.path.join(ad_dir, "videos", video_filename)
+                if self._download_asset(video_url, video_path):
+                    downloaded["videos"].append(video_path)
+            if downloaded["videos"]:
+                print(f"    ✓ Downloaded {len(downloaded['videos'])} videos")
+        
+        # Download posters
+        if assets.get("posters"):
+            for i, poster_url in enumerate(assets["posters"], 1):
+                poster_filename = self._generate_filename(poster_url, "poster", ad_id, i)
+                poster_path = os.path.join(ad_dir, "posters", poster_filename)
+                if self._download_asset(poster_url, poster_path):
+                    downloaded["posters"].append(poster_path)
+            if downloaded["posters"]:
+                print(f"    ✓ Downloaded {len(downloaded['posters'])} posters")
+        
+        return downloaded
+    
     def scrape_ad_detail(self, ad_id: str, link: str) -> Dict:
         """
         Scrape a single ad detail page
@@ -211,7 +349,13 @@ class LinkedInAdDetailBatchScraper:
             "call_to_action": None,
             "paid_for_by": None,
             "logo_url": None,
+            "logo_local_path": None,
             "assets": {
+                "images": [],
+                "videos": [],
+                "posters": []
+            },
+            "assets_local_paths": {
                 "images": [],
                 "videos": [],
                 "posters": []
@@ -377,7 +521,8 @@ class LinkedInAdDetailBatchScraper:
             return detail_links
     
     def scrape_from_json(self, input_json: str, output_json: str, 
-                        delay: float = 2.0, max_ads: Optional[int] = None) -> List[Dict]:
+                        delay: float = 2.0, max_ads: Optional[int] = None,
+                        download_assets: bool = True, assets_output_dir: str = "downloaded_assets") -> List[Dict]:
         """
         Read ads from JSON, extract detail links, and scrape each detail page
         
@@ -386,6 +531,8 @@ class LinkedInAdDetailBatchScraper:
             output_json: Path to output JSON file (e.g., "nike_ad_details.json")
             delay: Delay between requests in seconds
             max_ads: Maximum number of ads to scrape (None for all)
+            download_assets: Whether to download assets (default: True)
+            assets_output_dir: Directory to save downloaded assets
             
         Returns:
             List of ad detail dictionaries
@@ -394,6 +541,8 @@ class LinkedInAdDetailBatchScraper:
         print(f"Batch Scraping Ad Details")
         print(f"Input: {input_json}")
         print(f"Output: {output_json}")
+        if download_assets:
+            print(f"Assets Directory: {assets_output_dir}/")
         print(f"{'='*60}\n")
         
         # Extract detail links
@@ -415,6 +564,24 @@ class LinkedInAdDetailBatchScraper:
             print(f"[{i}/{len(detail_links)}] ", end="")
             
             detail = self.scrape_ad_detail(link_info["ad_id"], link_info["link"])
+            
+            # Download assets if enabled
+            if download_assets:
+                print(f"    Downloading assets...")
+                downloaded = self._download_ad_assets(
+                    ad_id=link_info["ad_id"],
+                    logo_url=detail.get("logo_url"),
+                    assets=detail.get("assets", {}),
+                    output_dir=assets_output_dir
+                )
+                
+                # Add local paths to detail
+                detail["logo_local_path"] = downloaded["logo"]
+                detail["assets_local_paths"] = {
+                    "images": downloaded["images"],
+                    "videos": downloaded["videos"],
+                    "posters": downloaded["posters"]
+                }
             
             # Add original ad data reference
             detail["original_ad_index"] = link_info["index"]
@@ -453,7 +620,9 @@ def main():
             input_json=input_file,
             output_json=output_file,
             delay=2.0,  # 2 second delay between requests
-            max_ads=None  # Set to a number to limit, or None for all
+            max_ads=None,  # Set to a number to limit, or None for all
+            download_assets=True,  # Download logos, images, videos
+            assets_output_dir="downloaded_assets"  # Directory for downloaded assets
         )
         
         if details:
